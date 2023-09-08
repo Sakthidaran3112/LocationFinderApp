@@ -12,6 +12,9 @@ import com.example.navigationapp.databinding.ActivityMapsBinding
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import java.io.IOException
 import java.util.Locale
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -19,6 +22,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private val REQUEST_LOCATION_PERMISSION = 1
+    private var selectedMarker: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,17 +87,36 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         enableMyLocation()
 
         mMap.setOnMapClickListener { latLng ->
-
             val geocoder = Geocoder(this, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
 
-            if (addresses?.isNotEmpty() == true) {
-                val address = addresses?.get(0)
-                val addressText = address?.getAddressLine(0)
-                Toast.makeText(this, addressText, Toast.LENGTH_LONG).show()
+            try {
+                val addresses = geocoder.getFromLocation(
+                    latLng.latitude,
+                    latLng.longitude,
+                    1
+                )
+                if (addresses?.isNotEmpty() == true) {
+                    val address = addresses[0]
+                    val addressText = address.getAddressLine(0)
+
+                    selectedMarker?.remove()
+
+                    // Create a marker at the clicked location and display the address as its title
+                    val newMarker = mMap.addMarker(
+                        MarkerOptions()
+                            .position(latLng)
+                            .title(addressText)
+                    )
+
+                    selectedMarker = newMarker
+
+                    newMarker?.showInfoWindow()
+                }
+            } catch (e: IOException) {
+                // Handle the exception (e.g., show an error message)
+                e.printStackTrace()
             }
         }
-
     }
 
     override fun onRequestPermissionsResult(
