@@ -1,11 +1,18 @@
 package com.example.navigationapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
+import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.navigationapp.databinding.ActivityMapsBinding
@@ -35,16 +42,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-
     private fun isPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -56,19 +53,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (isPermissionGranted()) {
             if (ActivityCompat.checkSelfPermission(
                     this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                    Manifest.permission.ACCESS_FINE_LOCATION
                 ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                     this,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    Manifest.permission.ACCESS_COARSE_LOCATION
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 return
             }
             mMap.setMyLocationEnabled(true)
@@ -86,6 +76,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
         enableMyLocation()
 
+        mMap.uiSettings.isZoomControlsEnabled = true
+
         mMap.setOnMapClickListener { latLng ->
             val geocoder = Geocoder(this, Locale.getDefault())
 
@@ -101,7 +93,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     selectedMarker?.remove()
 
-                    // Create a marker at the clicked location and display the address as its title
+                    // Creates a marker at the clicked location
                     val newMarker = mMap.addMarker(
                         MarkerOptions()
                             .position(latLng)
@@ -111,12 +103,50 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     selectedMarker = newMarker
 
                     newMarker?.showInfoWindow()
+
                 }
             } catch (e: IOException) {
-                // Handle the exception (e.g., show an error message)
                 e.printStackTrace()
             }
         }
+
+        mMap.setOnInfoWindowClickListener { marker ->
+            openContactDialog(marker.title)
+        }
+
+    }
+
+    private fun openContactDialog(address: String?) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_box, null)
+        val titleTextView = dialogView.findViewById<TextView>(R.id.address)
+        val messageTextView = dialogView.findViewById<TextView>(R.id.address_displayed)
+        val directionsButton = dialogView.findViewById<CardView>(R.id.direction_cardview)
+        val closeButton = dialogView.findViewById<Button>(R.id.btn_close)
+
+        titleTextView.text = "Address"
+        messageTextView.text = address
+
+        val builder = AlertDialog.Builder(this, R.style.PauseDialog)
+            .setView(dialogView)
+            .create()
+
+        closeButton.setOnClickListener {
+            builder.dismiss()
+        }
+
+        directionsButton.setOnClickListener {
+            val intentUri = Uri.parse("google.navigation:q=$address")
+            val intent = Intent(Intent.ACTION_VIEW, intentUri)
+            intent.setPackage("com.google.android.apps.maps")
+
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Google Maps app not found", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        builder.show()
     }
 
     override fun onRequestPermissionsResult(
