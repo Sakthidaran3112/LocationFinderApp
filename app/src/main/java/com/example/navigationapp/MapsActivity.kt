@@ -80,7 +80,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mMap.setOnMapClickListener { latLng ->
             val geocoder = Geocoder(this, Locale.getDefault())
-
             try {
                 val addresses = geocoder.getFromLocation(
                     latLng.latitude,
@@ -111,12 +110,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         mMap.setOnInfoWindowClickListener { marker ->
-            openContactDialog(marker.title)
+            openAddressDialog(marker.title)
         }
 
     }
 
-    private fun openContactDialog(address: String?) {
+    private fun openAddressDialog(address: String?) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_box, null)
         val titleTextView = dialogView.findViewById<TextView>(R.id.address)
         val messageTextView = dialogView.findViewById<TextView>(R.id.address_displayed)
