@@ -50,6 +50,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun enableMyLocation() {
+        // Checks if permission is granted
         if (isPermissionGranted()) {
             if (ActivityCompat.checkSelfPermission(
                     this,
@@ -74,9 +75,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        enableMyLocation()
+        enableMyLocation()   // Enables current location in map
 
-        mMap.uiSettings.isZoomControlsEnabled = true
+        mMap.uiSettings.isZoomControlsEnabled = true   // Enables zoom controls
 
         mMap.setOnMapClickListener { latLng ->
             val geocoder = Geocoder(this, Locale.getDefault())
@@ -90,7 +91,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     val address = addresses[0]
                     val addressText = address.getAddressLine(0)
 
-                    selectedMarker?.remove()
+                    selectedMarker?.remove()   // Deletes marker when new marker is created
 
                     // Creates a marker at the clicked location
                     val newMarker = mMap.addMarker(
@@ -139,7 +140,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             intent.setPackage("com.google.android.apps.maps")
 
             if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
+                startActivity(intent)  // Navigates to directions in map
             } else {
                 Toast.makeText(this, "Google Maps app not found", Toast.LENGTH_SHORT).show()
             }
